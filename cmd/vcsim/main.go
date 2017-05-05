@@ -44,7 +44,7 @@ func main() {
 	flag.IntVar(&model.Folder, "folder", model.Folder, "Number of folders")
 
 	isESX := flag.Bool("esx", false, "Simulate standalone ESX")
-	isTLS := flag.Bool("tls", true, "Enable TLS")
+	isTLS := flag.Bool("tls", false, "Enable TLS")
 	cert := flag.String("tlscert", "", "Path to TLS certificate file")
 	key := flag.String("tlskey", "", "Path to TLS key file")
 	flag.BoolVar(&simulator.Trace, "trace", simulator.Trace, "Trace SOAP to stderr")
