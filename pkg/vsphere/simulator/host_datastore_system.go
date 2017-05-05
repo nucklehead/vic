@@ -81,6 +81,38 @@ func (dss *HostDatastoreSystem) add(ds *Datastore) *soap.Fault {
 	return nil
 }
 
+func (dss *HostDatastoreSystem) delete(ds *Datastore) *soap.Fault {
+
+	dss.Datastore = append(dss.Datastore, ds.Self)
+	for i, datastoreRef := range dss.Datastore {
+		datastore := Map.Get(datastoreRef.Reference()).(*Datastore)
+		if ds.Name == datastore.Name {
+			if len(dss.Datastore) > i+1 {
+				dss.Datastore = append(dss.Datastore[:i], dss.Datastore[i+1:]...)
+			} else {
+				dss.Datastore = dss.Datastore[:i]
+			}
+		}
+	}
+
+	Map.Remove(ds.Browser)
+
+	dss.remove(ds)
+
+	return nil
+}
+
+func (dss *HostDatastoreSystem) remove(ds *Datastore) *soap.Fault {
+	folder := Map.getEntityFolder(dss.Host, "datastore")
+
+	parent := hostParent(dss.Host)
+	RemoveReference(ds.Self, parent.Datastore)
+
+	folder.removeChild(ds)
+
+	return nil
+}
+
 func (dss *HostDatastoreSystem) CreateLocalDatastore(c *types.CreateLocalDatastore) soap.HasFault {
 	r := &methods.CreateLocalDatastoreBody{}
 
@@ -153,6 +185,30 @@ func (dss *HostDatastoreSystem) CreateNasDatastore(c *types.CreateNasDatastore) 
 
 	r.Res = &types.CreateNasDatastoreResponse{
 		Returnval: ds.Self,
+	}
+
+	return r
+}
+
+func (dss *HostDatastoreSystem) DestroyHostDatastore(c *types.DestroyDatastore) soap.HasFault {
+	r := &methods.DestroyDatastoreBody{}
+
+	datastore := Map.Get(c.This.Reference()).(*Datastore)
+
+	if err := dss.delete(datastore); err != nil {
+		r.Fault_ = err
+	}
+
+	return r
+}
+
+func (dss *HostDatastoreSystem) RemoveHostDatastore(c *types.RemoveDatastore) soap.HasFault {
+	r := &methods.DestroyDatastoreBody{}
+
+	datastore := Map.Get(c.This.Reference()).(*Datastore)
+
+	if err := dss.remove(datastore); err != nil {
+		r.Fault_ = err
 	}
 
 	return r

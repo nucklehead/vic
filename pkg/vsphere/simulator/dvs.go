@@ -68,6 +68,42 @@ func (s *VmwareDistributedVirtualSwitch) AddDVPortgroupTask(c *types.AddDVPortgr
 	}
 }
 
+// TODO Finish delete
+// func (s *VmwareDistributedVirtualSwitch) DeleteDVPortgroupTask(c *types.dele) soap.HasFault {
+// 	task := CreateTask(s, "deleteDVPortgroupTask", func(t *Task) (types.AnyType, types.BaseMethodFault) {
+// 		f := Map.getEntityParent(s, "Folder").(*Folder)
+// 		pg := Map.Get(c.This.Reference()).(*mo.DistributedVirtualPortgroup)
+// 		for i, h := range pg.Host {
+// 			hostSystem := Map.Get(h.Reference()).(*HostSystem)
+// 			for _, pnic := range hostSystem.Config.Network.Pnic {
+// 				if pnic.Device == c.Spec {
+//
+// 				}
+// 			}
+//
+// 			pg.Host = AddReference(h, pg.Host)
+// 			host := Map.Get(h).(*HostSystem)
+// 			host.Network = append(host.Network, pg.Reference())
+// 		}
+// 		if pg := FindReference(host.Network, s.Portgroup...); pg != nil {
+// 			return nil, &types.ResourceInUse{
+// 				Type: pg.Type,
+// 				Name: pg.Value,
+// 			}
+// 		}
+//
+// 		return nil, nil
+// 	})
+//
+// 	task.Run()
+//
+// 	return &methods.AddDVPortgroup_TaskBody{
+// 		Res: &types.AddDVPortgroup_TaskResponse{
+// 			Returnval: task.Self,
+// 		},
+// 	}
+// }
+
 func (s *VmwareDistributedVirtualSwitch) ReconfigureDvsTask(req *types.ReconfigureDvs_Task) soap.HasFault {
 	task := CreateTask(s, "reconfigureDvsTask", func(t *Task) (types.AnyType, types.BaseMethodFault) {
 		spec := req.Spec.GetDVSConfigSpec()
@@ -95,14 +131,10 @@ func (s *VmwareDistributedVirtualSwitch) ReconfigureDvsTask(req *types.Reconfigu
 					pg.Host = AddReference(member.Host, pg.Host)
 				}
 			case types.ConfigSpecOperationRemove:
-				if pg := FindReference(host.Network, s.Portgroup...); pg != nil {
-					return nil, &types.ResourceInUse{
-						Type: pg.Type,
-						Name: pg.Value,
-					}
-				}
-
-				host.Network = RemoveReference(s.Self, host.Network)
+				pgRef := FindReference(host.Network, s.Portgroup...)
+				pg := Map.Get(pgRef.Reference()).(*mo.DistributedVirtualPortgroup)
+				pg.Host = RemoveReference(member.Host, pg.Host)
+				// host.Network = RemoveReference(s.Self, host.Network)
 				s.Summary.HostMember = RemoveReference(s.Self, s.Summary.HostMember)
 			case types.ConfigSpecOperationEdit:
 				return nil, &types.NotSupported{}

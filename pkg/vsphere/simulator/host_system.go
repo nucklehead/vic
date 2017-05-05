@@ -17,7 +17,9 @@ package simulator
 import (
 	"time"
 
+	"github.com/vmware/govmomi/vim25/methods"
 	"github.com/vmware/govmomi/vim25/mo"
+	"github.com/vmware/govmomi/vim25/soap"
 	"github.com/vmware/govmomi/vim25/types"
 	"github.com/vmware/vic/pkg/vsphere/simulator/esx"
 )
@@ -116,4 +118,77 @@ func CreateStandaloneHost(f *Folder, spec types.HostConnectSpec) (*HostSystem, t
 	pool.Owner = cr.Self
 
 	return host, nil
+}
+
+type destroyHostSystemTask struct {
+	*HostSystem
+}
+
+func (c *destroyHostSystemTask) Run(task *Task) (types.AnyType, types.BaseMethodFault) {
+	// Delete all VMs/VApps/Folders associated with hosts
+	for _, vmReference := range c.HostSystem.Vm {
+		switch vm := Map.Get(vmReference.Reference()).(type) {
+		case *VirtualMachine:
+			vm.DestroyTask(&types.Destroy_Task{})
+		case *VirtualApp:
+			vm.DestroyTask(&types.Destroy_Task{})
+		case *ResourcePool:
+			vm.DestroyTask(&types.Destroy_Task{})
+		}
+	}
+
+	// Delete Associated Vswitch & NetworkSystem
+	hostNetworkSystem := Map.Get(c.HostSystem.ConfigManager.NetworkSystem.Reference()).(*HostNetworkSystem)
+
+	for _, vswitch := range hostNetworkSystem.NetworkInfo.Vswitch {
+		hostNetworkSystem.RemoveVirtualSwitch(&types.RemoveVirtualSwitch{VswitchName: vswitch.Name})
+	}
+
+	// Delete the Datastores of type VMFS
+
+	hostDatastoreSystem := Map.Get(c.HostSystem.ConfigManager.DatastoreSystem.Reference()).(*HostDatastoreSystem)
+	for _, dsReference := range c.HostSystem.Datastore {
+		dataStore := Map.Get(dsReference.Reference()).(*Datastore)
+		if len(dataStore.Host) == 1 {
+			hostDatastoreSystem.DestroyHostDatastore(&types.DestroyDatastore{This: dsReference.Reference()})
+		} else {
+			hostDatastoreSystem.RemoveHostDatastore(&types.RemoveDatastore{This: dsReference.Reference()})
+		}
+	}
+
+	for _, networkRef := range c.HostSystem.Network {
+		switch network := Map.Get(networkRef.Reference()).(type) {
+		case *mo.DistributedVirtualPortgroup:
+			dvs := Map.Get(network.Config.DistributedVirtualSwitch.Reference()).(*VmwareDistributedVirtualSwitch)
+			req := types.ReconfigureDvs_Task{
+				Spec: &types.VMwareDVSConfigSpec{
+					DVSConfigSpec: types.DVSConfigSpec{
+						Host: []types.DistributedVirtualSwitchHostMemberConfigSpec{
+							types.DistributedVirtualSwitchHostMemberConfigSpec{
+								Operation: string(types.ConfigSpecOperationRemove),
+								Host:      c.HostSystem.Reference(),
+							},
+						},
+					},
+				},
+			}
+			dvs.ReconfigureDvsTask(&req)
+		}
+	}
+
+	return nil, nil
+}
+
+func (h *HostSystem) DestroyTask(c *types.Destroy_Task) soap.HasFault {
+	r := &methods.Destroy_TaskBody{}
+
+	task := NewTask(&destroyHostSystemTask{h})
+
+	r.Res = &types.Destroy_TaskResponse{
+		Returnval: task.Self,
+	}
+
+	task.Run()
+
+	return r
 }

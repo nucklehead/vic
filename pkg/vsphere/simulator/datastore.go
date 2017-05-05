@@ -91,3 +91,5 @@ func (ds *Datastore) RefreshDatastore(*types.RefreshDatastore) soap.HasFault {
 
 	return r
 }
+
+//TODO maybe

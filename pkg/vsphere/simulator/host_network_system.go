@@ -75,9 +75,13 @@ func (s *HostNetworkSystem) RemoveVirtualSwitch(c *types.RemoveVirtualSwitch) so
 	for i, v := range vs {
 		if v.Name == c.VswitchName {
 			s.NetworkInfo.Vswitch = append(vs[:i], vs[i+1:]...)
+			for _, pg := range v.Portgroup {
+				s.RemovePortGroup(&types.RemovePortGroup{PgName: pg})
+			}
 			r.Res = &types.RemoveVirtualSwitchResponse{}
 			return r
 		}
+
 	}
 
 	r.Fault_ = Fault("", &types.NotFound{})
