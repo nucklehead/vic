@@ -26,6 +26,7 @@ import (
 
 type ServiceInstance struct {
 	mo.ServiceInstance
+	Model *Model
 }
 
 var serviceInstance = types.ManagedObjectReference{
@@ -33,20 +34,19 @@ var serviceInstance = types.ManagedObjectReference{
 	Value: "ServiceInstance",
 }
 
-func NewServiceInstance(content types.ServiceContent, folder mo.Folder) *ServiceInstance {
+func NewServiceInstance(model *Model) *ServiceInstance {
 	Map = NewRegistry()
 
-	s := &ServiceInstance{}
+	s := &ServiceInstance{Model: model}
 
 	s.Self = serviceInstance
-	s.Content = content
-
+	s.Content = model.ServiceContent
 	Map.Put(s)
 
-	f := &Folder{Folder: folder}
+	f := &Folder{Folder: model.RootFolder}
 	Map.Put(f)
 
-	if content.About.ApiType == "HostAgent" {
+	if model.ServiceContent.About.ApiType == "HostAgent" {
 		CreateDefaultESX(f)
 	}
 

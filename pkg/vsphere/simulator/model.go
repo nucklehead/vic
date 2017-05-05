@@ -148,7 +148,7 @@ func (*Model) fmtName(prefix string, num int) string {
 
 // Create populates the Model with the given ModelConfig
 func (m *Model) Create() error {
-	m.Service = New(NewServiceInstance(m.ServiceContent, m.RootFolder))
+	m.Service = New(NewServiceInstance(m))
 
 	ctx := context.Background()
 	client := m.Service.client

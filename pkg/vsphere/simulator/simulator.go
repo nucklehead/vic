@@ -61,6 +61,8 @@ type Service struct {
 	readAll func(io.Reader) ([]byte, error)
 
 	TLS *tls.Config
+
+	Model *Model
 }
 
 // Server provides a simulator Service over HTTP
@@ -75,6 +77,7 @@ type Server struct {
 func New(instance *ServiceInstance) *Service {
 	s := &Service{
 		readAll: ioutil.ReadAll,
+		Model:   instance.Model,
 	}
 
 	s.client, _ = vim25.NewClient(context.Background(), s)
@@ -229,6 +232,29 @@ func (s *Service) About(w http.ResponseWriter, r *http.Request) {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	_ = enc.Encode(&about)
+}
+
+// About generates some info about the simulator.
+func (s *Service) Reset(w http.ResponseWriter, r *http.Request) {
+	var status struct {
+		Status string
+	}
+
+	switch r.Method {
+	case "POST":
+		s.Model.Remove()
+		s.Model.Create()
+
+		status.Status = "Success"
+		w.Header().Set("Content-Type", "application/json")
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		_ = enc.Encode(&status)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
 }
 
 // ServeSDK implements the http.Handler interface
@@ -388,6 +414,8 @@ func (s *Service) NewServer() *Server {
 	mux.HandleFunc(path+"/vimServiceVersions.xml", s.ServiceVersions)
 	mux.HandleFunc(folderPrefix, s.ServeDatastore)
 	mux.HandleFunc("/about", s.About)
+	//Reset content
+	mux.HandleFunc("/reset", s.Reset)
 
 	// Using NewUnstartedServer() instead of NewServer(),
 	// for use in main.go, where Start() blocks, we can still set ServiceHostName
