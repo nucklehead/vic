@@ -192,3 +192,33 @@ func (h *HostSystem) DestroyTask(c *types.Destroy_Task) soap.HasFault {
 
 	return r
 }
+
+//
+// // Enter Maintenance Mode
+// type enterMaintenanceModeTask struct {
+// 	*HostSystem
+// }
+//
+// func (c *enterMaintenanceModeTask) Run(task *Task) (types.AnyType, types.BaseMethodFault) {
+//
+// 	return nil, nil
+// }
+//
+// func (h *HostSystem) EnterMaintenanceModeTask(c *types.EnterMaintenanceMode_Task) soap.HasFault {
+// 	r := &methods.EnterMaintenanceMode_TaskBody{}
+//
+// 	task := NewTask(&enterMaintenanceModeTask{h})
+//
+// 	r.Res = &types.EnterMaintenanceMode_TaskResponse{
+// 		Returnval: task.Self,
+// 	}
+// 	// Delete all VMs/VApps/Folders associated with hosts
+// 	if !h.Runtime.InMaintenanceMode {
+// 		h.Runtime.InMaintenanceMode = true
+// 		return r
+// 	}
+//
+// 	// return nil, &types.InvalidStateFault{}
+// 	r.Fault_.Detail.Fault = types.InvalidStateFault{}
+// 	return r
+// }
