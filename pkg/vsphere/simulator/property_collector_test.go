@@ -42,7 +42,10 @@ func TestRetrieveProperties(t *testing.T) {
 	}
 
 	for _, config := range configs {
-		s := New(NewServiceInstance(config.content, config.folder))
+		model := Model{}
+		model.ServiceContent = esx.ServiceContent
+		model.RootFolder = esx.RootFolder
+		s := New(NewServiceInstance(&model))
 
 		ts := s.NewServer()
 		defer ts.Close()
@@ -236,7 +239,10 @@ func TestRetrieveProperties(t *testing.T) {
 
 func TestWaitForUpdates(t *testing.T) {
 	folder := esx.RootFolder
-	s := New(NewServiceInstance(esx.ServiceContent, folder))
+	model := Model{}
+	model.ServiceContent = esx.ServiceContent
+	model.RootFolder = esx.RootFolder
+	s := New(NewServiceInstance(&model))
 
 	ts := s.NewServer()
 	defer ts.Close()

@@ -226,7 +226,10 @@ func TestServeHTTP(t *testing.T) {
 	}
 
 	for _, config := range configs {
-		s := New(NewServiceInstance(config.content, config.folder))
+		model := Model{}
+		model.ServiceContent = config.content
+		model.RootFolder = config.folder
+		s := New(NewServiceInstance(&model))
 		ts := s.NewServer()
 		defer ts.Close()
 
@@ -311,7 +314,10 @@ func TestServeAbout(t *testing.T) {
 }
 
 func TestServeHTTPS(t *testing.T) {
-	s := New(NewServiceInstance(esx.ServiceContent, esx.RootFolder))
+	model := Model{}
+	model.ServiceContent = esx.ServiceContent
+	model.RootFolder = esx.RootFolder
+	s := New(NewServiceInstance(&model))
 	s.TLS = new(tls.Config)
 	ts := s.NewServer()
 	defer ts.Close()
@@ -410,7 +416,10 @@ type errorNoSuchMethod struct {
 }
 
 func TestServeHTTPErrors(t *testing.T) {
-	s := New(NewServiceInstance(esx.ServiceContent, esx.RootFolder))
+	model := Model{}
+	model.ServiceContent = esx.ServiceContent
+	model.RootFolder = esx.RootFolder
+	s := New(NewServiceInstance(&model))
 
 	ts := s.NewServer()
 	defer ts.Close()

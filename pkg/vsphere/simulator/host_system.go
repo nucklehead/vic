@@ -193,32 +193,86 @@ func (h *HostSystem) DestroyTask(c *types.Destroy_Task) soap.HasFault {
 	return r
 }
 
-//
-// // Enter Maintenance Mode
-// type enterMaintenanceModeTask struct {
-// 	*HostSystem
-// }
-//
-// func (c *enterMaintenanceModeTask) Run(task *Task) (types.AnyType, types.BaseMethodFault) {
-//
-// 	return nil, nil
-// }
-//
-// func (h *HostSystem) EnterMaintenanceModeTask(c *types.EnterMaintenanceMode_Task) soap.HasFault {
-// 	r := &methods.EnterMaintenanceMode_TaskBody{}
-//
-// 	task := NewTask(&enterMaintenanceModeTask{h})
-//
-// 	r.Res = &types.EnterMaintenanceMode_TaskResponse{
-// 		Returnval: task.Self,
-// 	}
-// 	// Delete all VMs/VApps/Folders associated with hosts
-// 	if !h.Runtime.InMaintenanceMode {
-// 		h.Runtime.InMaintenanceMode = true
-// 		return r
-// 	}
-//
-// 	// return nil, &types.InvalidStateFault{}
-// 	r.Fault_.Detail.Fault = types.InvalidStateFault{}
-// 	return r
-// }
+// Enter Maintenance Mode
+type enterMaintenanceModeTask struct {
+	*HostSystem
+}
+
+func (c *enterMaintenanceModeTask) Run(task *Task) (types.AnyType, types.BaseMethodFault) {
+	if !c.HostSystem.Runtime.InMaintenanceMode {
+		c.HostSystem.Runtime.InMaintenanceMode = true
+		Map.Put(c.HostSystem)
+		return nil, nil
+	}
+	return nil, &types.InvalidState{}
+}
+
+func (h *HostSystem) EnterMaintenanceModeTask(c *types.EnterMaintenanceMode_Task) soap.HasFault {
+	r := &methods.EnterMaintenanceMode_TaskBody{}
+
+	task := NewTask(&enterMaintenanceModeTask{h})
+
+	r.Res = &types.EnterMaintenanceMode_TaskResponse{
+		Returnval: task.Self,
+	}
+
+	task.Run()
+
+	return r
+}
+
+// Exit Maintenance Mode
+type exitMaintenanceModeTask struct {
+	*HostSystem
+}
+
+func (c *exitMaintenanceModeTask) Run(task *Task) (types.AnyType, types.BaseMethodFault) {
+	if !c.HostSystem.Runtime.InMaintenanceMode {
+		c.HostSystem.Runtime.InMaintenanceMode = false
+		Map.Put(c.HostSystem)
+		return nil, nil
+	}
+	return nil, &types.InvalidState{}
+}
+
+func (h *HostSystem) ExitMaintenanceModeTask(c *types.ExitMaintenanceMode_Task) soap.HasFault {
+	r := &methods.ExitMaintenanceMode_TaskBody{}
+
+	task := NewTask(&exitMaintenanceModeTask{h})
+
+	r.Res = &types.ExitMaintenanceMode_TaskResponse{
+		Returnval: task.Self,
+	}
+
+	task.Run()
+
+	return r
+}
+
+// Poweroff
+type shutdownHostTask struct {
+	*HostSystem
+}
+
+func (c *shutdownHostTask) Run(task *Task) (types.AnyType, types.BaseMethodFault) {
+	if c.HostSystem.HostSystem.Runtime.PowerState != types.HostSystemPowerStatePoweredOff {
+		c.HostSystem.HostSystem.Runtime.PowerState = types.HostSystemPowerStatePoweredOff
+		Map.Put(c.HostSystem.HostSystem)
+		return nil, nil
+	}
+	return nil, &types.InvalidState{}
+}
+
+func (h *HostSystem) ShutdownHostTask(c *types.ShutdownHost_Task) soap.HasFault {
+	r := &methods.ShutdownHost_TaskBody{}
+
+	task := NewTask(&shutdownHostTask{h})
+
+	r.Res = &types.ShutdownHost_TaskResponse{
+		Returnval: task.Self,
+	}
+
+	task.Run()
+
+	return r
+}

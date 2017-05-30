@@ -24,7 +24,10 @@ import (
 )
 
 func TestDefaultESX(t *testing.T) {
-	s := New(NewServiceInstance(esx.ServiceContent, esx.RootFolder))
+	model := Model{}
+	model.ServiceContent = esx.ServiceContent
+	model.RootFolder = esx.RootFolder
+	s := New(NewServiceInstance(&model))
 
 	ts := s.NewServer()
 	defer ts.Close()
