@@ -257,7 +257,6 @@ type shutdownHostTask struct {
 func (c *shutdownHostTask) Run(task *Task) (types.AnyType, types.BaseMethodFault) {
 	if c.HostSystem.HostSystem.Runtime.PowerState != types.HostSystemPowerStatePoweredOff {
 		c.HostSystem.HostSystem.Runtime.PowerState = types.HostSystemPowerStatePoweredOff
-		Map.Put(c.HostSystem.HostSystem)
 		return nil, nil
 	}
 	return nil, &types.InvalidState{}

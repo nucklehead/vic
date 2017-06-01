@@ -122,6 +122,7 @@ func fieldValue(rval reflect.Value, p string) (interface{}, error) {
 
 		x := ucFirst(name)
 		val := rval.FieldByName(x)
+
 		if !val.IsValid() {
 			return nil, errMissingField
 		}
@@ -133,6 +134,7 @@ func fieldValue(rval reflect.Value, p string) (interface{}, error) {
 		if i == len(fields)-1 {
 			ftype, _ := rval.Type().FieldByName(x)
 			value = fieldValueInterface(ftype, val)
+
 			break
 		}
 
@@ -269,6 +271,7 @@ func (rr *retrieveResult) collect(ref types.ManagedObjectReference) {
 	}
 
 	rval, ok := getObject(ref)
+
 	if !ok {
 		// Possible if a test uses Map.Remove instead of Destroy_Task
 		log.Printf("object %s no longer exists", ref)

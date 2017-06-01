@@ -408,7 +408,6 @@ func (f *Folder) CreateDVSTask(c *types.CreateDVS_Task) soap.HasFault {
 			return nil, &types.InvalidArgument{InvalidProperty: "name"}
 		}
 		dvs.Uuid = uuid.New().String()
-		fmt.Printf("\n\nI ran \n\n")
 		// TODO: loop over c.Spec.ConfigSpec.GetDVSConfigSpec().Host to create Host feild
 		configInfo := types.DVSConfigInfo{
 			DefaultPortConfig: c.Spec.ConfigSpec.GetDVSConfigSpec().DefaultPortConfig,
